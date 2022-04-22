@@ -3,12 +3,16 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 import * as path from 'path'
-import { ExtensionContext, workspace } from 'vscode'
+import { ExtensionContext, workspace, languages } from 'vscode'
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node'
+import { selector, provider, legend } from './explorer'
 
 let client: LanguageClient
 
 export function activate(context: ExtensionContext): void {
+  const dispSemantic = languages.registerDocumentSemanticTokensProvider(selector, provider, legend)
+  context.subscriptions.push(dispSemantic)
+
   // The server is implemented in node
   const serverModule = context.asAbsolutePath(
     path.join('server', 'out', 'server.js')
@@ -31,7 +35,7 @@ export function activate(context: ExtensionContext): void {
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {
     // Register the server for Wollok documents
-    documentSelector: [{ scheme: 'file', language: 'wollok' }],
+    documentSelector: [selector], //{ scheme: 'file', language: 'wollok' }],
     synchronize: {
       configurationSection: 'wollokLinter',
       // Notify the server about file changes to '.clientrc files contained in the workspace

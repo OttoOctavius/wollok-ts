@@ -3,7 +3,8 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 import * as path from 'path'
-import * as Mocha from 'mocha'
+//import * as Mocha from 'mocha'
+require('mocha')
 import * as glob from 'glob'
 
 export function run(): Promise<void> {

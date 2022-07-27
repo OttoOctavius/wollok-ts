@@ -174,75 +174,66 @@ function plotter(start: { ln, col, len }, kind: string): NodePlotter {
   }
 }
 
-/*
-function procesar(node: PackageNode)
-function procesar(node: ProgramNode)
-function procesar(node: ClassNode)
-*/
 function procesar(node: Node, documentoStr: string[]) {
   //const subStr = documentoStr.substring(node.sourceMap.start.offset, node.sourceMap.end.offset)
   //if (node.is('Method') || node.is('Field'))
   const subStr = documentoStr[node.sourceMap.start.line-1] //(offset, node.sourceMap.end.offset)
 
-  if (node.is('Class')) {
-    const col = subStr.indexOf(node.name)
-    return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
-  }
-  if (node.is('Singleton')) {
-    const col = subStr.indexOf(node.name)
-    return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
-  }
-  if (node.is('Field')) {
-    const col = subStr.indexOf(node.name)
-    return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
-  }
-  if (node.is('Reference')) {
-    //node.variable
-    //node.value
-    //TODO: Si previamente hay un campo del mismo nombre no se toma
-    //TODO: los parametros o propiedades se toman como nuevas referencias
-    const columnMap = node.sourceMap.start.column
-    const col = columnMap + subStr.substring(columnMap).indexOf(node.name)
-    return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
-  }
-  if (node.is('Assignment')) {
-    //node.variable
-    //node.value
-    const col = subStr.indexOf(node.variable.name)
-    return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.variable.name.length }, node.kind)
-  }
-  if (node.is('Parameter')){
-    const col = subStr.indexOf(node.name)
-    return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
-  }
-  if (node.is('Method')) {
-    const col = subStr.indexOf(node.name)
-    return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
-  }
-  if (node.is('Literal')) {
-    const tipo = typeof node.value
-    const token =
-      tipo == 'number' || tipo == 'bigint'? 'Literal_number':
-      tipo == 'string'? 'Literal_string':
-      //tipo == 'boolean'? 'Singleton':
-      //tipo == 'symbol' && node.value == null? 'Singleton':
-      //'Unknow'
-      ''
-    if (token == '') return undefined
-    const valor = node.value.toString()
-    let col = subStr.indexOf(valor)
-    col = token == 'Literal_string'? col - 1: col
-    const len = token == 'Literal_string'? valor.length + 2: valor.length
-    return plotter({ ln: node.sourceMap.start.line-1, col: col, len: len }, token)
-  }
-  if(node.is('Assignment')){
-    return undefined //plotter({ln: node.sourceMap.start.line, col:node.sourceMap.start.column, len:5}, node.kind)
-  }
-  //if(node.is())
-  //  return plotter({ln: node.sourceMap.start.line, col:node.sourceMap.start.column, len:5}, node.kind)
-  //[...children, plotter(node)]
-  else
-    return undefined //children
+  node.match({
+    Class: node => {
+      const col = subStr.indexOf(node.name)
+      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+    },
+    Singleton: node => {
+      const col = subStr.indexOf(node.name)
+      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+    },
+    Field: node => {
+      const col = subStr.indexOf(node.name)
+      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+    },
+    Reference: node => {
+      //node.variable
+      //node.value
+      //TODO: Si previamente hay un campo del mismo nombre no se toma
+      //TODO: los parametros o propiedades se toman como nuevas referencias
+      const columnMap = node.sourceMap.start.column
+      const col = columnMap + subStr.substring(columnMap).indexOf(node.name)
+      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+    },
+    Assignment: node => {
+      //node.variable
+      //node.value
+      const col = subStr.indexOf(node.variable.name)
+      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.variable.name.length }, node.kind)
+    },
+    Parameter: node => {
+      const col = subStr.indexOf(node.name)
+      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+    },
+    Method: node => {
+      const col = subStr.indexOf(node.name)
+      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+    },
+    Literal: node => {
+      const tipo = typeof node.value
+      const token =
+        tipo == 'number' || tipo == 'bigint'? 'Literal_number':
+        tipo == 'string'? 'Literal_string':
+        //tipo == 'boolean'? 'Singleton':
+        //tipo == 'symbol' && node.value == null? 'Singleton':
+        //'Unknow'
+        ''
+      if (token == '') return undefined
+      const valor = node.value.toString()
+      let col = subStr.indexOf(valor)
+      col = token == 'Literal_string'? col - 1: col
+      const len = token == 'Literal_string'? valor.length + 2: valor.length
+      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: len }, token)
+    },
+  })
+
+  return undefined
 }
 
 

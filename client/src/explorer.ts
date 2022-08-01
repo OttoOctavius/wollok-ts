@@ -1,6 +1,6 @@
 ///esModuleIn
 import * as vscode from 'vscode'
-import { parse, Node } from 'wollok-ts'
+import { parse, Node, Singleton } from 'wollok-ts'
 
 //const tokenTypes = ['Parameter', 'ParameterizedType', 'NamedArgument', 'Import', 'Body', 'Catch', 'Package', 'Program', 'Test', 'Class', 'Singleton', 'Mixin', 'Describe', 'Variable', 'Field', 'Method', 'Return', 'Assignment', 'Reference', 'Self', 'Literal', 'Send', 'Super', 'New', 'If', 'Throw', 'Try', 'Environment']
 const tokenModifiers = ['declaration', 'definition', 'documentation', 'keyword']
@@ -27,7 +27,7 @@ const tokenTypeObj = {
   'Literal': 'property',
   'Literal_number': 'number',
   'Literal_string': 'string',
-  'Send': 'property',
+  'Send': 'method',
   'Super': 'property',
   'New': 'property',
   'If': 'property',
@@ -151,9 +151,8 @@ const keywords = {
   'Assignment':'=',
   //'Reference':'property',
   'Self':'self',
-  /*'Literal':'property',
-  'Send':'property',
-  'Super':'property',
+  //'Literal':'property',
+  /*'Super':'property',
   'New':'property',
   'If':'property',
   'Throw':'property',
@@ -179,7 +178,7 @@ function procesar(node: Node, documentoStr: string[]) {
   //if (node.is('Method') || node.is('Field'))
   const subStr = documentoStr[node.sourceMap.start.line-1] //(offset, node.sourceMap.end.offset)
 
-  node.match({
+  return node.match({
     Class: node => {
       const col = subStr.indexOf(node.name)
       return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
@@ -197,6 +196,9 @@ function procesar(node: Node, documentoStr: string[]) {
       //node.value
       //TODO: Si previamente hay un campo del mismo nombre no se toma
       //TODO: los parametros o propiedades se toman como nuevas referencias
+
+      if(node.name == 'wollok.lang.Closure')
+        return undefined
       const columnMap = node.sourceMap.start.column
       const col = columnMap + subStr.substring(columnMap).indexOf(node.name)
       return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
@@ -215,27 +217,73 @@ function procesar(node: Node, documentoStr: string[]) {
       const col = subStr.indexOf(node.name)
       return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
     },
+    Send: node => {
+      const col = subStr.indexOf(node.message)
+      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.message.length }, node.kind)
+    },
+    Return: node => undefined,
     Literal: node => {
       const tipo = typeof node.value
-      const token =
-        tipo == 'number' || tipo == 'bigint'? 'Literal_number':
-        tipo == 'string'? 'Literal_string':
-        //tipo == 'boolean'? 'Singleton':
-        //tipo == 'symbol' && node.value == null? 'Singleton':
-        //'Unknow'
-        ''
-      if (token == '') return undefined
-      const valor = node.value.toString()
-      let col = subStr.indexOf(valor)
-      col = token == 'Literal_string'? col - 1: col
-      const len = token == 'Literal_string'? valor.length + 2: valor.length
-      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: len }, token)
+
+      switch (tipo) {
+        case 'number':
+        case 'bigint':
+          const valor_numerico = node.value.toString()
+          return plotter({
+            ln: node.sourceMap.start.line-1,
+            col: subStr.indexOf(valor_numerico),
+            len: valor_numerico.length,
+          }, 'Literal_number')
+        case 'string':
+          const valor_string = node.value.toString()
+          return plotter({
+            ln: node.sourceMap.start.line-1,
+            col: subStr.indexOf(valor_string) - 1,
+            len: valor_string.length + 2,
+          }, 'Literal_string')
+        case 'object':
+          const closure = node.value as Singleton
+          if(closure){
+            //Literal<Singleton> es un Closure. contiene Field y Method
+            /*closure.forEach(nodo => {
+              nodo
+            })*/
+          }
+          return undefined//plotter({ ln: node.sourceMap.start.line-1, col: col, len: len }, 'Singleton')
+        default:
+          return undefined
+      }
     },
+    Package: node => undefined,
+    Import:  node => undefined,
+    Program: node => undefined,
+    Body:    node => undefined,
+    Entity:  node => undefined,
+    Sentence:node => undefined,
+    Expression:  node => undefined,
+    
+    Catch: node => undefined,
+    Test:  node => undefined,
+    ParameterizedType: node => {
+      //closure, fix no funciona
+      const cnode = node
+      return undefined
+    },
+    NamedArgument:    node => undefined,
+
+    Mixin:  node => undefined,
+    Describe: node => undefined,
+    Variable:    node => undefined,
+    
+    Environment:  node => undefined,
+    Try: node => undefined,
+    Throw:    node => undefined,
+    
+    If: node => undefined,
+    New:    node => undefined,
+    Super: node => undefined,
   })
-
-  return undefined
 }
-
 
 function processNode(node: Node, documentoStr: string[]): NodePlotter[] {
   return node.reduce((acum, node: Node) => //acum.concat(procesar(node))

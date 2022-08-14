@@ -1,165 +1,12 @@
 ///esModuleIn
 import * as vscode from 'vscode'
 import { parse, Node, Singleton } from 'wollok-ts'
-
-//const tokenTypes = ['Parameter', 'ParameterizedType', 'NamedArgument', 'Import', 'Body', 'Catch', 'Package', 'Program', 'Test', 'Class', 'Singleton', 'Mixin', 'Describe', 'Variable', 'Field', 'Method', 'Return', 'Assignment', 'Reference', 'Self', 'Literal', 'Send', 'Super', 'New', 'If', 'Throw', 'Try', 'Environment']
-const tokenModifiers = ['declaration', 'definition', 'documentation', 'keyword']
-const tokenTypeObj = {
-  'Parameter': 'parameter',
-  'ParameterizedType': 'property',
-  'NamedArgument': 'property',
-  'Import': 'namespace',
-  'Body': 'property',
-  'Catch': 'property',
-  'Package': 'property',
-  'Program': 'property',
-  'Test': 'function',
-  'Singleton': 'object', //'entity.name.type.class',//
-  'Mixin': 'property',
-  'Describe': 'property',
-  'Variable': 'variable',
-  'Field': 'property',
-  'Method': 'method', //'entity.name.function.member',
-  'Return': 'keyword',
-  'Assignment': 'property',
-  'Reference': 'property',
-  'Self': 'property',
-  'Literal': 'property',
-  'Literal_number': 'number',
-  'Literal_string': 'string',
-  'Send': 'method',
-  'Super': 'property',
-  'New': 'property',
-  'If': 'property',
-  'Throw': 'property',
-  'Try': 'property',
-  'Environment': 'property',
-  'Class': 'class', //'class', //'entity.name.type.class',
-
-  'Keyword': 'keyword',
-  'Unknow': 'unknow',
-}
-
-const tokenTypeModifierObj = {
-  'Parameter': ['declaration'],
-  'ParameterizedType': ['declaration'],
-  'NamedArgument': ['declaration'],
-  'Import': ['declaration'],
-  'Body': ['declaration'],
-  'Catch': ['declaration'],
-  'Package': ['declaration'],
-  'Program': ['declaration'],
-  'Test': ['declaration'],
-  'Singleton': ['declaration'],
-  'Mixin': ['declaration'],
-  'Describe': ['declaration'],
-  'Variable': ['declaration'],
-  'Field': ['declaration'],
-  'Method': ['declaration'],
-  'Return': ['declaration'],
-  'Assignment': ['declaration'],
-  'Reference': ['declaration'],
-  'Self': ['declaration'],
-  'Literal': ['declaration'], //['readonly'],
-  'Literal_number': ['declaration'], //['readonly'],
-  'Literal_string': ['declaration'], //['readonly'],
-  'Send': ['declaration'],
-  'Super': ['declaration'],
-  'New': ['declaration'],
-  'If': ['declaration'],
-  'Throw': ['declaration'],
-  'Try': ['declaration'],
-  'Environment': ['declaration'],
-  'Class': ['declaration'], //'class', //'entity.name.type.class',
-
-  //TODO:este rompia....!!!
-  'Keyword': ['declaration'], //['static'],
-  //['readonly'],
-  //'Unknow': 'unknow',
-}
-//Standard token types:
-//ID	Description
-const tokenTypes = [
-  'namespace', //	For identifiers that declare or reference a namespace, module, or package.
-  'class', //	For identifiers that declare or reference a class type.
-  'object', //No es parte de los tipos por default
-  'enum', //	For identifiers that declare or reference an enumeration type.
-  'interface', //	For identifiers that declare or reference an interface type.
-  'struct', //	For identifiers that declare or reference a struct type.
-  'typeParameter', //	For identifiers that declare or reference a type parameter.
-  'type', //	For identifiers that declare or reference a type that is not covered above.
-  'parameter', //	For identifiers that declare or reference a function or method parameters.
-  'variable', //	For identifiers that declare or reference a local or global variable.
-  'property', //	For identifiers that declare or reference a member property, member field, or member variable.
-  'enumMember', //	For identifiers that declare or reference an enumeration property, constant, or member.
-  'decorator', //	For identifiers that declare or reference decorators and annotations.
-  'event', //	For identifiers that declare an event property.
-  'function', //	For identifiers that declare a function.
-  'method', //	For identifiers that declare a member function or method.
-  'macro', //	For identifiers that declare a macro.
-  'label', //	For identifiers that declare a label.
-  'comment', //	For tokens that represent a comment.
-  'string', //	For tokens that represent a string literal.
-  'keyword', //	For tokens that represent a language keyword.
-  'number', //	For tokens that represent a number literal.
-  'regexp', //	For tokens that represent a regular expression literal.
-  'operator', //	For tokens that represent an operator.
-]
-/*
-Standard token modifiers:
-
-ID	Description
-declaration	For declarations of symbols.
-definition	For definitions of symbols, for example, in header files.
-readonly	For readonly variables and member fields (constants).
-static	For class members (static members).
-deprecated	For symbols that should no longer be used.
-abstract	For types and member functions that are abstract.
-async	For functions that are marked async.
-modification	For variable references where the variable is assigned to.
-documentation	For occurrences of symbols in documentation.
-defaultLibrary	For symbols that are part of the standard library.
-*/
-
-export const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers)
+import * as def from './highlighterDef'
 
 type NodePlotter = {
   range: vscode.Range
   tokenType: string
   tokenModifiers?: string[]
-}
-
-const keywords = {
-  /*
-  'Parameter':'property',
-  'ParameterizedType':'property',
-  'NamedArgument':'property',
-  'Import':'property',
-  'Body':'property',
-  'Catch':'property',
-  'Package':'property',
-  'Program':'property',
-  'Test':'function',
-  */
-  'Singleton': 'object',
-  //'Mixin':'property',
-  //'Describe':'property',
-  'Variable': 'var',
-  'Field':'var',
-  'Method': 'method',
-  'Return': 'return',
-  'Assignment':'=',
-  //'Reference':'property',
-  'Self':'self',
-  //'Literal':'property',
-  /*'Super':'property',
-  'New':'property',
-  'If':'property',
-  'Throw':'property',
-  'Try':'property',
-  'Environment':'property',
-  */
-  'Class': 'class',
 }
 
 function plotter(start: { ln, col, len }, kind: string): NodePlotter {
@@ -168,88 +15,132 @@ function plotter(start: { ln, col, len }, kind: string): NodePlotter {
       new vscode.Position(start.ln, start.col),
       new vscode.Position(start.ln, start.col + start.len),
     ),
-    tokenType: tokenTypeObj[kind],
-    tokenModifiers: tokenTypeModifierObj[kind],
+    tokenType: def.tokenTypeObj[kind],
+    tokenModifiers: def.tokenTypeModifierObj[kind],
+  }
+}
+
+function extraerLineaColumna(node: Node, documentoStr: string[]) {
+  const linea = node.sourceMap.start.line-1
+  const columna = node.sourceMap.start.column-1
+
+  return {
+    linea: linea,
+    columna: columna,
+    subStr:documentoStr[linea].substring(columna),
   }
 }
 
 function procesar(node: Node, documentoStr: string[]) {
-  //const subStr = documentoStr.substring(node.sourceMap.start.offset, node.sourceMap.end.offset)
-  //if (node.is('Method') || node.is('Field'))
-  const subStr = documentoStr[node.sourceMap.start.line-1] //(offset, node.sourceMap.end.offset)
-
   return node.match({
     Class: node => {
-      const col = subStr.indexOf(node.name)
-      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+      const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
+      const col = columna + subStr.indexOf(node.name)
+      return plotter({ ln: linea, col: col, len: node.name.length }, node.kind)
     },
     Singleton: node => {
-      const col = subStr.indexOf(node.name)
-      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+      if(node.sourceMap == undefined) return undefined
+      const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
+      const col = columna + subStr.indexOf(node.name)
+      return plotter({ ln: linea, col: col, len: node.name.length }, node.kind)
     },
     Field: node => {
-      const col = subStr.indexOf(node.name)
-      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+      const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
+      const col = columna + subStr.indexOf(node.name)
+      return plotter({ ln: linea, col: col, len: node.name.length }, node.kind)
+    },
+    Variable: node => {
+      const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
+      const col = columna + subStr
+        //.substring(node.sourceMap.start.column-1)
+        .indexOf(node.name)
+      return plotter({ ln: linea, col: col, len: node.name.length }, node.kind)
     },
     Reference: node => {
       //node.variable
       //node.value
       //TODO: Si previamente hay un campo del mismo nombre no se toma
       //TODO: los parametros o propiedades se toman como nuevas referencias
-
       if(node.name == 'wollok.lang.Closure')
         return undefined
-      const columnMap = node.sourceMap.start.column
-      const col = columnMap + subStr.substring(columnMap).indexOf(node.name)
-      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+      const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
+      const col = columna + subStr
+        //.substring(columna)
+        .indexOf(node.name)
+      return plotter({ ln: linea, col: col, len: node.name.length }, node.kind)
     },
     Assignment: node => {
       //node.variable
       //node.value
-      const col = subStr.indexOf(node.variable.name)
-      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.variable.name.length }, node.kind)
+      const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
+      const col = columna + subStr.indexOf(node.variable.name)
+      return plotter({ ln: linea, col: col, len: node.variable.name.length }, node.kind)
     },
     Parameter: node => {
-      const col = subStr.indexOf(node.name)
-      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+      const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
+      const col = columna + subStr.indexOf(node.name)
+      return plotter({ ln: linea, col: col, len: node.name.length }, node.kind)
     },
     Method: node => {
-      const col = subStr.indexOf(node.name)
-      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.name.length }, node.kind)
+      if(node.name == '<apply>'){ //es un singleton closure
+        return undefined
+      }
+      const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
+      const col = columna + subStr.indexOf(node.name)
+      return plotter({ ln: linea, col: col, len: node.name.length }, node.kind)
     },
     Send: node => {
-      const col = subStr.indexOf(node.message)
-      return plotter({ ln: node.sourceMap.start.line-1, col: col, len: node.message.length }, node.kind)
+      const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
+      if(node.message == 'negate'){
+        const negateC = subStr.indexOf('!')
+        if(negateC == -1){
+          const col = columna + subStr.indexOf('not')
+          return plotter({ ln: linea, col: col, len: 3 }, node.kind)
+        }
+        return plotter({ ln: linea, col: columna + negateC, len: 1 }, node.kind)
+      }
+      const col = columna + subStr.indexOf(node.message)
+      return plotter({ ln: linea, col: col, len: node.message.length }, node.kind)
     },
-    Return: node => undefined,
+    Return: _ => {
+      return undefined
+    },
     Literal: node => {
       const tipo = typeof node.value
-
+      if(tipo == 'object'){
+        const closure = node.value as Singleton
+        if(closure){
+          //Literal<Singleton> es un Closure. contiene Field y Method
+          /*closure.forEach(nodo => {
+            nodo
+          })*/
+        }
+        return undefined//plotter({ ln: linea, col: col, len: len }, 'Singleton')
+      }
+      const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
       switch (tipo) {
         case 'number':
         case 'bigint':
           const valor_numerico = node.value.toString()
           return plotter({
-            ln: node.sourceMap.start.line-1,
-            col: subStr.indexOf(valor_numerico),
+            ln: linea,
+            col: columna + subStr.indexOf(valor_numerico),
             len: valor_numerico.length,
           }, 'Literal_number')
+        case 'boolean':
+          const valor_booleano = node.value.toString()
+          return plotter({
+            ln: linea,
+            col: columna + subStr.indexOf(valor_booleano),
+            len: valor_booleano.length,
+          }, 'Literal_bool')
         case 'string':
           const valor_string = node.value.toString()
           return plotter({
-            ln: node.sourceMap.start.line-1,
-            col: subStr.indexOf(valor_string) - 1,
+            ln: linea,
+            col: columna + subStr.indexOf(valor_string) - 1,
             len: valor_string.length + 2,
           }, 'Literal_string')
-        case 'object':
-          const closure = node.value as Singleton
-          if(closure){
-            //Literal<Singleton> es un Closure. contiene Field y Method
-            /*closure.forEach(nodo => {
-              nodo
-            })*/
-          }
-          return undefined//plotter({ ln: node.sourceMap.start.line-1, col: col, len: len }, 'Singleton')
         default:
           return undefined
       }
@@ -260,39 +151,64 @@ function procesar(node: Node, documentoStr: string[]) {
     Body:    node => undefined,
     Entity:  node => undefined,
     Sentence:node => undefined,
-    Expression:  node => undefined,
-    
+    Expression:  node => {
+      return undefined
+    },
     Catch: node => undefined,
     Test:  node => undefined,
     ParameterizedType: node => {
       //closure, fix no funciona
-      const cnode = node
       return undefined
     },
     NamedArgument:    node => undefined,
 
     Mixin:  node => undefined,
     Describe: node => undefined,
-    Variable:    node => undefined,
-    
+
     Environment:  node => undefined,
     Try: node => undefined,
     Throw:    node => undefined,
-    
-    If: node => undefined,
-    New:    node => undefined,
-    Super: node => undefined,
+
+    If: node => {
+      return undefined
+    },
+    New: node => {
+      return undefined
+    },
+    Super: node => {
+      return undefined
+    },
   })
 }
 
+
+function excepcionKeyword(node: Node, mapKeyword: string|string[]){
+  if(node.kind == 'Singleton'){
+    return node.members.reduce((prev, curr) => !curr.name.startsWith('<') && prev, true)
+  }
+  if(node.kind == 'Method'){
+    return node.name!='<apply>'
+  }
+  /*if(node.kind == 'Send'){
+    return mapKeyword.includes(node.message)
+  }*/
+  return true
+}
 function processNode(node: Node, documentoStr: string[]): NodePlotter[] {
-  return node.reduce((acum, node: Node) => //acum.concat(procesar(node))
+  return node.reduce((acum, node: Node) =>
   {
-    const curretKeyboard = keywords[node.kind]
-    if (curretKeyboard !== undefined){
-      const subStr = documentoStr[node.sourceMap.start.line-1]
+    let curretKeyboard = def.keywords[node.kind]
+    if (curretKeyboard !== undefined && excepcionKeyword(node, curretKeyboard)){
+      //||node.kind == 'Send'){
+      if(node.kind == 'Variable'){
+        curretKeyboard = node.isConstant? 'const':'var'
+      }
+      if(node.kind == 'Send'){
+        curretKeyboard = node.message
+      }
+      const { linea, subStr } = extraerLineaColumna(node, documentoStr)
       const col = subStr.indexOf(curretKeyboard)
-      const plotKeyboard = plotter({ ln: node.sourceMap.start.line-1, col: col, len: curretKeyboard.length }, 'Keyword')
+      const plotKeyboard = plotter({ ln: linea, col: col, len: curretKeyboard.length }, 'Keyword')
 
       return acum.concat(procesar(node, documentoStr)).concat(plotKeyboard)
     }
@@ -323,4 +239,6 @@ export const provider: vscode.DocumentSemanticTokensProvider = {
     return tokensBuilder.build()
   },
 }
+
+export const legend = new vscode.SemanticTokensLegend(def.tokenTypes, def.tokenModifiers)
 export const selector = { language: 'wollok', scheme: 'file' }

@@ -1,24 +1,9 @@
 ///esModuleIn
 import * as vscode from 'vscode'
 import { parse, Node, Singleton } from 'wollok-ts'
+import { plotter, NodePlotter} from './highlighterDef'
 import * as def from './highlighterDef'
-
-type NodePlotter = {
-  range: vscode.Range
-  tokenType: string
-  tokenModifiers?: string[]
-}
-
-function plotter(start: { ln, col, len }, kind: string): NodePlotter {
-  return {
-    range: new vscode.Range(
-      new vscode.Position(start.ln, start.col),
-      new vscode.Position(start.ln, start.col + start.len),
-    ),
-    tokenType: def.tokenTypeObj[kind],
-    tokenModifiers: def.tokenTypeModifierObj[kind],
-  }
-}
+import { processComments } from './token_provider'
 
 function extraerLineaColumna(node: Node, documentoStr: string[]) {
   const linea = node.sourceMap.start.line-1
@@ -231,7 +216,12 @@ export const provider: vscode.DocumentSemanticTokensProvider = {
     const docText = document.getText()
     const tp = parsedFile.tryParse(docText)
 
-    const processed = processNode(tp.members[0], separarLineas(docText)).filter(x => x !== undefined)
+    const lineasSeparadas = separarLineas(docText)
+    const processed = []
+      //.concat(processNode(tp.members[0], lineasSeparadas))
+      .concat(processComments(lineasSeparadas))
+      .filter(x => x !== undefined)
+
     processed.forEach((x: NodePlotter) =>
       tokensBuilder.push(x.range, x.tokenType, x.tokenModifiers)
     )

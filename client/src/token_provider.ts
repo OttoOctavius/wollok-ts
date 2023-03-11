@@ -1,6 +1,7 @@
 import { plotter, NodePlotter, keywords } from './highlighterDef'
 import { Node, Singleton } from 'wollok-ts'
 
+//Nota: no todos los node's tienen .start (dando undefined), pueden provocar excepciones.
 function extraerLineaColumna(node: Node, documentoStr: string[]) {
   const linea = node.sourceMap.start.line-1
   const columna = node.sourceMap.start.column-1
@@ -71,17 +72,10 @@ function procesar(node: Node, documentoStr: string[]) {
       return plotter({ ln: linea, col: col, len: node.name.length }, node.kind)
     },
     Send: node => {
+      if(keywords.Send.includes(node.message)) return undefined
       const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
-      if(node.message == 'negate'){
-        const negateC = subStr.indexOf('!')
-        if(negateC == -1){
-          const col = columna + subStr.indexOf('not')
-          return plotter({ ln: linea, col: col, len: 3 }, node.kind)
-        }
-        return plotter({ ln: linea, col: columna + negateC, len: 1 }, node.kind)
-      }
       const col = columna + subStr.indexOf(node.message)
-      return plotter({ ln: linea, col: col, len: node.message.length }, node.kind)
+      return plotter({ ln: linea, col: col, len: node.message.length }, 'Method')//node.kind)
     },
     Return: _ => {
       return undefined
@@ -126,38 +120,33 @@ function procesar(node: Node, documentoStr: string[]) {
           return undefined
       }
     },
-    Package: node => undefined,
-    Import:  node => undefined,
-    Program: node => undefined,
-    Body:    node => undefined,
-    Entity:  node => undefined,
-    Sentence:node => undefined,
-    Expression:  node => {
-      return undefined
-    },
-    Catch: node => undefined,
-    Test:  node => undefined,
-    ParameterizedType: node => {
-      //closure, fix no funciona
-      return undefined
-    },
-    NamedArgument:    node => undefined,
+    Package: _ => undefined,
+    Import:  _ => undefined,
+    Program: _ => undefined,
+    Body:    _ => undefined,
+    Entity:  _ => undefined,
+    Sentence:    _ => undefined,
+    Expression:  _ => undefined,
+    Catch: _ => undefined,
+    Test:  _ => undefined,
+    ParameterizedType: _ => undefined,
+    NamedArgument:    _ => undefined,
 
-    Mixin:  node => undefined,
-    Describe: node => undefined,
+    Mixin:  _ => undefined,
+    Describe: _ => undefined,
 
-    Environment:  node => undefined,
-    Try: node => undefined,
-    Throw:    node => undefined,
+    Environment:  _ => undefined,
+    Try: _ => undefined,
+    Throw:    _ => undefined,
 
     If: node => {
       console.log(node)
       return undefined
     },
-    New: node => {
+    New: _ => {
       return undefined
     },
-    Super: node => {
+    Super: _ => {
       return undefined
     },
   })
@@ -171,9 +160,9 @@ function excepcionKeyword(node: Node, mapKeyword: string|string[]){
   if(node.kind == 'Method'){
     return node.name!='<apply>'
   }
-  /*if(node.kind == 'Send'){
+  if(node.kind == 'Send'){
     return mapKeyword.includes(node.message)
-  }*/
+  }
   return true
 }
 
@@ -181,18 +170,31 @@ export function processCode(node: Node, documentoStr: string[]): NodePlotter[] {
   return node.reduce((acum, node: Node) =>
   {
     let curretKeyboard = keywords[node.kind]
+
     if (curretKeyboard !== undefined && excepcionKeyword(node, curretKeyboard)){
+      const { linea, columna,  subStr } = extraerLineaColumna(node, documentoStr)
+      let kindType = 'Keyword' //node.kind
       //||node.kind == 'Send'){
       if(node.kind == 'Variable'){
         curretKeyboard = node.isConstant? 'const':'var'
       }
-      if(node.kind == 'Send'){
+      if(node.kind == 'Send'){ // && curretKeyboard.includes(node.message)){
         curretKeyboard = node.message
+        kindType = 'Send'
+        if(curretKeyboard == 'negate'){//es la forma alternativa del simbolo '!'
+          const idx_negate = subStr.indexOf('!')
+          const col_offset: number= idx_negate == -1? subStr.indexOf('not'): idx_negate
+          const plotKeyboard =  plotter({
+            ln: linea,
+            col: columna + col_offset,
+            len: idx_negate == -1? 3: 1,
+          }, kindType)
+          return acum.concat(procesar(node, documentoStr)).concat(plotKeyboard)
+        }
       }
-      const { linea, columna,  subStr } = extraerLineaColumna(node, documentoStr)
-      const col = columna + subStr.indexOf(curretKeyboard)
-      const plotKeyboard = plotter({ ln: linea, col: col, len: curretKeyboard.length }, 'Keyword')
 
+      const col = columna + subStr.indexOf(curretKeyboard)
+      const plotKeyboard = plotter({ ln: linea, col: col, len: curretKeyboard.length }, kindType)
       return acum.concat(procesar(node, documentoStr)).concat(plotKeyboard)
     }
     return acum.concat(procesar(node, documentoStr))

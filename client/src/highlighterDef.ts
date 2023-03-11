@@ -98,17 +98,16 @@ export const keywords = {
   //'Mixin':'property',
   //'Describe':'property',
   'Variable': ['var', 'const'],
-  /*
   'Send': [
     // eslint-disable-next-line array-element-newline
     '+', '*', '-', '/', '<', '>', '<=', '>=',
     // eslint-disable-next-line array-element-newline
-    'and', 'or', 'not',
+    'and', 'or', 'not', 'negate',
     // eslint-disable-next-line array-element-newline
     '&&', '||', '!',
     // eslint-disable-next-line array-element-newline
     '==', '!=',
-  ],*/
+  ],
   'Field':'var',
   'Method': 'method',
   'Return': 'return',

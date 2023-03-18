@@ -28,7 +28,7 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
   const drop_reference = node => { return { result: node, references: undefined }}
   const null_case = { result: undefined, references: undefined }
 
-  if(node.kind === 'New'){ //por alguna razon no hace match
+  if(node.kind === 'New' || node.kind === 'Self' || node.kind === 'If'){ //por alguna razon no hace match
     return drop_reference(keyword_plotter(node, keywords[node.kind]))
   }
 

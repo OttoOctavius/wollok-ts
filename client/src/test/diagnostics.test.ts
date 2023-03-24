@@ -6,6 +6,7 @@
 import * as vscode from 'vscode'
 import * as assert from 'assert'
 import { getDocUri, activate } from './helper'
+import { suite } from 'mocha'
 
 suite('Should get diagnostics', () => {
   const docUri = getDocUri('diagnostics.txt')

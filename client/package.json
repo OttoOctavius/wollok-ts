@@ -19,34 +19,34 @@
 		"@vscode/test-electron": "^1.6.1",
 		"vscode-languageclient": "^7.0.0"
 	},
-  "configurationDefaults": {
-    "wollok": {
-      "editor.semanticHighlighting.enabled": true
-    }
-  },
-  "contributes": {
-    "semanticTokenTypes": [
-      {
-        "id": "keyword",
-        "superType": "type",
-        "description": "palabra reservada de wollok"
-      },
-      {
-        "id": "object",
-        "superType": "type",
-        "description": "singleton"
-      },
-      {
-        "id": "parameter",
-        "superType": "type",
-        "description": "parametro de metodos o funciones"
-      }
-    ],
-    "semanticTokenModifiers": [
-      {
-        "id": "native",
-        "description": "simbolo nativo de wollok"
-      }
-    ]
-  }
+	"configurationDefaults": {
+		"wollok": {
+			"editor.semanticHighlighting.enabled": true
+		}
+	},
+	"contributes": {
+		"semanticTokenTypes": [
+			{
+				"id": "keyword",
+				"superType": "type",
+				"description": "palabra reservada de wollok"
+			},
+			{
+				"id": "object",
+				"superType": "type",
+				"description": "singleton"
+			},
+			{
+				"id": "parameter",
+				"superType": "type",
+				"description": "parametro de metodos o funciones"
+			}
+		],
+		"semanticTokenModifiers": [
+			{
+				"id": "native",
+				"description": "simbolo nativo de wollok"
+			}
+		]
+	}
 }

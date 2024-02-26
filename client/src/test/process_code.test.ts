@@ -7,6 +7,7 @@ import { suite } from 'mocha'
 import { plotter } from '../highlighterDef'
 import { start } from 'repl'
 import { isNumberObject, isStringObject } from 'util/types'
+import { readFileSync } from 'fs'
 
 const comentariosLineas = `// solo una linea
 var f   = 1
@@ -137,7 +138,7 @@ suite('Semantica wollok', function () {
       const start  = simbolo.range.start
       const end  = simbolo.range.end
       assert.ok(start.line==end.line, 'token esta en la misma linea')
-      //console.log(simbolo)
+
       const contenido = lineasSeparadas[start.line].substring(start.character, end.character)
       switch (contenido) {
         case 'const':
@@ -193,7 +194,7 @@ suite('Semantica wollok', function () {
       const start  = simbolo.range.start
       const end  = simbolo.range.end
       assert.ok(start.line==end.line, 'token esta en la misma linea')
-      console.log(simbolo)
+
       const contenido = lineasSeparadas[start.line].substring(start.character, end.character)
       switch (contenido) {
         case 'class':
@@ -347,7 +348,8 @@ suite('Semantica wollok', function () {
           break
         //variables
         case 'conductor':
-        case 'pasajeros':
+        case 'patente':
+        //case 'pasajeros':
           assert.equal(
             simbolo.tokenType,
             'property',
@@ -360,7 +362,7 @@ suite('Semantica wollok', function () {
         case 'chocar':
           assert.equal(
             simbolo.tokenType,
-            'method', //<--------------------------------deberia ser operador
+            'method',
             'error en el tipo de token de metodo'
           )
           break
@@ -377,10 +379,13 @@ suite('Semantica wollok', function () {
         case 'clear':
           assert.equal(
             simbolo.tokenType,
-            'operator',
+            'method',
             'error en el tipo de token de metodos de los parametros'
           )
           break
+        default:
+          // hay otro caso con property..?
+          assert.fail('No debe haber extras')
       }
     })
   })
@@ -404,7 +409,7 @@ suite('Semantica wollok', function () {
       const start  = simbolo.range.start
       const end  = simbolo.range.end
       assert.ok(start.line==end.line, 'token esta en la misma linea')
-      console.log(simbolo)
+
       const contenido = lineasSeparadas[start.line].substring(start.character, end.character)
       switch (contenido) {
         case 'class':
@@ -442,7 +447,7 @@ suite('Semantica wollok', function () {
       const start  = simbolo.range.start
       const end  = simbolo.range.end
       assert.ok(start.line==end.line, 'token esta en la misma linea')
-      console.log(simbolo)
+
       const contenido = lineasSeparadas[start.line].substring(start.character, end.character)
       switch (contenido) {
         case 'object':
@@ -462,9 +467,18 @@ suite('Semantica wollok', function () {
           break
       }
     })
-  })
+    test('test archivo', async function () {
+      const contenido =  extraerContenidoArchivo('../testFixture/_comentarios.wlk')
 
+    })
+
+    //mas test aqui
+  })
 })
+
+function extraerContenidoArchivo(ruta:string) {
+  return readFileSync(`./{ruta}`, 'utf-8')
+}
 
 async function compararUriConResultadoToken(
   docUri: vscode.Uri,

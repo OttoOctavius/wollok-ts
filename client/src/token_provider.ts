@@ -13,7 +13,7 @@ function extraerLineaColumna(node: Node, documentoStr: string[]) {
   }
 }
 
-function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
+function procesar(node: Node, documentoStr: string[], context: NodeContext[]): ProcesamientoCodigo {
   const generar_plotter = node => {
     const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
     const col = columna + subStr.indexOf(node.name)
@@ -49,7 +49,7 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
       return { result: acum, references: save_reference(node) }
     },
     Field: node => {
-      //if(node.c == '<toString>') return null_case
+      if(node.name == '<toString>') return { result: undefined, references: undefined, ignore: node.value }
       return {
         result: [
           generar_plotter(node),
@@ -228,18 +228,21 @@ type NodeContext = {name: string, type: string}
 type ProcesamientoCodigo = {
   result: NodePlotter[];
   references: NodeContext | NodeContext[];
+  ignore?: Node;
 }
 
 export function processCode(node: Node, documentoStr: string[]): NodePlotter[] {
   return node.reduce((acum, node: Node) =>
   {
+    if(acum.ignore && node === acum.ignore) return acum
     const proc_nodo = procesar(node, documentoStr, acum.references)
 
     return {
       result: proc_nodo.result? acum.result.concat(proc_nodo.result):acum.result,
       references: acum.references.concat(proc_nodo.references || []),
+      ignore: proc_nodo.ignore,
     }
-  }, { result:[], references: [] }).result
+  }, { result:[], references: [], ignore:undefined }).result
 }
 //return { result: [...acum.result, procesar(node, documentoStr), plotKeyboard], references: acum.references }
 //return { result: [...acum.result, procesar(node, documentoStr), plotKeyboard], references: acum.references}

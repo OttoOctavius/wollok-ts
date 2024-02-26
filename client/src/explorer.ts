@@ -20,9 +20,12 @@ export const provider: vscode.DocumentSemanticTokensProvider = {
     const tp = parsedFile.tryParse(docText)
 
     const lineasSeparadas = separarLineas(docText)
+    const pcd = processCode(tp.members[0], lineasSeparadas)
+    const pcm = processComments(lineasSeparadas)
+
     const processed = []
-      .concat(processCode(tp.members[0], lineasSeparadas))
-      .concat(processComments(lineasSeparadas))
+      .concat(pcd)
+      .concat(pcm)
       .filter(x => x !== undefined)
 
     processed.forEach((x: def.NodePlotter) =>

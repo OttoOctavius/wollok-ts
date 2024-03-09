@@ -31,6 +31,12 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
   if(node.kind === 'New' || node.kind === 'Self' || node.kind === 'If'){ //por alguna razon no hace match
     return drop_reference(keyword_plotter(node, keywords[node.kind]))
   }
+  if(node.kind === 'Describe' || node.kind === 'Test'){ //tampoco hay match, se consideran 'Entity'
+    return drop_reference([
+      keyword_plotter(node, keywords[node.kind]),
+      generar_plotter(node),
+    ])
+  }
 
   return node.match({
     Class: node => {
@@ -52,8 +58,8 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
       //if(node.c == '<toString>') return null_case
       return {
         result: [
-          generar_plotter(node),
           keyword_plotter(node, keywords[node.kind]),
+          generar_plotter(node),
         ],
         references: save_reference(node),
       }
@@ -72,15 +78,20 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
       //node.value
       //TODO: Si previamente hay un campo del mismo nombre no se toma
       //TODO: los parametros o propiedades se toman como nuevas referencias
-      if(node.name == 'wollok.lang.Closure')
+      if(node.name == 'wollok.lang.Closure'
+      || node.name == 'wollok.lang.List'
+      || node.name == 'wollok.lang.Set')
         return null_case
 
       const referencia  = context.find(x => x.name==node.name)
-      const pl = generar_plotter(node)
+      //TODO: Encontrar la forma de incorporar referencias de las importaciones
+      //como console
       if(referencia){
+        const pl = generar_plotter(node)
         pl.tokenType = tokenTypeObj[referencia.type]
+        return { result: pl, references: undefined } //no agrego informacion
       }
-      return { result: pl, references: undefined } //no agrego informacion
+      return null_case
     },
     Assignment: node => {
       //node.variable
@@ -188,7 +199,12 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
     },
     Package: _ => null_case,
     Import:  _ => null_case,
-    Program: _ => null_case,
+    Program: _ => {
+      return drop_reference([
+        keyword_plotter(node, keywords[node.kind]),
+        generar_plotter(node),
+      ])
+    },
     Body:    _ => null_case,
     Entity:  _ => null_case,
     Sentence:    _ => {
@@ -196,7 +212,13 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
     },
     Expression:  _ => null_case,
     Catch: _ => null_case,
-    Test:  _ => null_case,
+    
+    Describe: node => {
+      return drop_reference(keyword_plotter(node, keywords[node.kind]))
+    },
+    Test:  node => {
+      return drop_reference(keyword_plotter(node, keywords[node.kind]))
+    },
     ParameterizedType: _ => {
       //console.log(node)
       return null_case
@@ -204,7 +226,6 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
     NamedArgument:    _ => null_case,
 
     Mixin:  _ => null_case,
-    Describe: _ => null_case,
 
     Environment:  _ => null_case,
     Try: _ => null_case,
@@ -239,7 +260,7 @@ export function processCode(node: Node, documentoStr: string[]): NodePlotter[] {
       result: proc_nodo.result? acum.result.concat(proc_nodo.result):acum.result,
       references: acum.references.concat(proc_nodo.references || []),
     }
-  }, { result:[], references: [] }).result
+  }, { result:[], references: [{name: 'console', type: 'Reference'}] }).result
 }
 //return { result: [...acum.result, procesar(node, documentoStr), plotKeyboard], references: acum.references }
 //return { result: [...acum.result, procesar(node, documentoStr), plotKeyboard], references: acum.references}

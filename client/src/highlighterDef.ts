@@ -90,13 +90,12 @@ export const keywords = {
   'Import':'property',
   'Body':'property',
   'Catch':'property',
-  'Package':'property',
-  'Program':'property',
-  'Test':'function',
-  */
+  'Package':'property',*/
+  'Program':'program',
+  'Test':'test',
+  'Describe':'describe',
   'Singleton': 'object',
   //'Mixin':'property',
-  //'Describe':'property',
   'Variable': ['var', 'const'],
   'Send': [
     // eslint-disable-next-line array-element-newline

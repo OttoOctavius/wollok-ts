@@ -28,8 +28,14 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
   const drop_reference = node => { return { result: node, references: undefined }}
   const null_case = { result: undefined, references: undefined }
 
-  if(node.kind === 'New' || node.kind === 'Self' || node.kind === 'If'){ //por alguna razon no hace match
+  if(node.kind === 'New' || node.kind === 'Self'){ //por alguna razon no hace match
     return drop_reference(keyword_plotter(node, keywords[node.kind]))
+  }
+  if(node.kind === 'If'){ //por alguna razon no hace match
+    const if_keywords = [keyword_plotter(node, keywords[node.kind])]
+    if(node.elseBody)
+      if_keywords.push(keyword_plotter(node, keywords['Else']))
+    return drop_reference(if_keywords)
   }
   if(node.kind === 'Describe' || node.kind === 'Test'){ //tampoco hay match, se consideran 'Entity'
     return drop_reference([
@@ -55,7 +61,7 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
       return { result: acum, references: save_reference(node) }
     },
     Field: node => {
-      //if(node.c == '<toString>') return null_case
+      if(node.isSynthetic()) return null_case
       return {
         result: [
           keyword_plotter(node, keywords[node.kind]),
@@ -110,11 +116,11 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
       const col = columna + subStr.indexOf(node.name)
       return {
         result: plotter({ ln: linea, col: col, len: node.name.length }, node.kind),
-        references: undefined,
+        references: save_reference(node),
       }
     },
     Method: node => {
-      if(node.name == '<apply>'){ //es un singleton closure
+      if(node.isSynthetic()){ //es un singleton closure
         return null_case
       }
 
@@ -157,6 +163,7 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
       return drop_reference(keyword_plotter(node, keywords[node.kind]))
     },
     Literal: node => {
+      if(node.isSynthetic()) return null_case
       const tipo = typeof node.value
       if(tipo == 'object'){
         const closure = node.value as Singleton
@@ -197,9 +204,29 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]) {
           return null_case
       }
     },
-    Package: _ => null_case,
-    Import:  _ => null_case,
-    Program: _ => {
+    Package: node => {
+      //el nombre puede o no estar
+      try { //alternativamente examinar si el keyword tiene indice negativo
+        return {
+          result: [
+            keyword_plotter(node, keywords[node.kind]),
+            generar_plotter(node),
+          ], references: save_reference(node),
+        }}
+      catch(e){
+        //console.log('Package '+ node.name + ' no encontrado', e)
+        return null_case
+      }
+    },
+    Import:  node => {
+      return {
+        result: [
+          keyword_plotter(node, keywords[node.kind]),
+          generar_plotter(node.entity),
+        ], references: save_reference(node.entity),
+      }
+    },
+    Program: node => {
       return drop_reference([
         keyword_plotter(node, keywords[node.kind]),
         generar_plotter(node),

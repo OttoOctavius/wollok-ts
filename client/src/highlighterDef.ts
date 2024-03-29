@@ -87,10 +87,10 @@ export const keywords = {
   'Parameter':'property',
   'ParameterizedType':'property',
   'NamedArgument':'property',
-  'Import':'property',
-  'Body':'property',
-  'Catch':'property',
-  'Package':'property',*/
+  'Body':'property',*/
+  'Catch':'catch',
+  'Package':'package',
+  'Import':'import',
   'Program':'program',
   'Test':'test',
   'Describe':'describe',
@@ -115,6 +115,7 @@ export const keywords = {
   'Self':'self',
   'New':'new',
   'If':'if',
+  'Else':'else',
   //'Literal':'property',
   /*'Super':'property',
   'Throw':'property',

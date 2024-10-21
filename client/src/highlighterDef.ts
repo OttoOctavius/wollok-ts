@@ -87,16 +87,15 @@ export const keywords = {
   'Parameter':'property',
   'ParameterizedType':'property',
   'NamedArgument':'property',
-  'Import':'property',
-  'Body':'property',
-  'Catch':'property',
-  'Package':'property',
-  'Program':'property',
-  'Test':'function',
-  */
+  'Body':'property',*/
+  'Catch':'catch',
+  'Package':'package',
+  'Import':'import',
+  'Program':'program',
+  'Test':'test',
+  'Describe':'describe',
   'Singleton': 'object',
   //'Mixin':'property',
-  //'Describe':'property',
   'Variable': ['var', 'const'],
   'Send': [
     // eslint-disable-next-line array-element-newline
@@ -116,6 +115,7 @@ export const keywords = {
   'Self':'self',
   'New':'new',
   'If':'if',
+  'Else':'else',
   //'Literal':'property',
   /*'Super':'property',
   'Throw':'property',

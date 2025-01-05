@@ -1,10 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as assert from 'assert'
 import { processComments } from './../token_provider'
 import { parse } from 'wollok-ts'
-import * as vscode from 'vscode'
 import { suite } from 'mocha'
-import { plotter } from '../highlighterDef'
-import { start } from 'repl'
+//import { plotter } from '../highlighterDef'
 
 const comentariosLineas = `// solo una linea
 var f   = 1
@@ -29,12 +28,12 @@ function separarLineas(text: string) {
 
 suite('Semantica wollok', function () {
   test('basico test', async function () {
-    console.log('texto')
-    const lineasSeparadas = separarLineas(comentariosLineas)
+//    console.log('texto')
+    //const lineasSeparadas = separarLineas(comentariosLineas)
 
     const parsedFile = parse.File('_comentarios.wlk')
     const tp = parsedFile.tryParse(comentariosLineas)//docUri.toString())
-    console.log(tp)
+    //console.log(tp)
   })
 
   test('comentarios de una linea', async function () {
@@ -83,7 +82,7 @@ suite('Semantica wollok', function () {
     let inicioComentario = true
     assert.equal( pcm.length>1, true, 'hay varios comentarios')
     pcm.forEach( comentario => {
-      console.log(comentario)
+//      console.log(comentario)
       assert.equal(
         comentario.tokenType,
         'comment',

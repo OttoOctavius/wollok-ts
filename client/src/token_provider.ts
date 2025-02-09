@@ -62,11 +62,14 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]): P
     },
     Field: node => {
       if(node.isSynthetic()) return { ...null_case, ignore: node.value }
+
+      const acum = [
+        keyword_plotter(node, keywords[node.kind][node.isConstant ? 1 : 0]),
+        generar_plotter(node),
+      ]
+      if(node.isProperty)acum.push(keyword_plotter(node, keywords['Property']))
       return {
-        result: [
-          keyword_plotter(node, keywords[node.kind]),
-          generar_plotter(node),
-        ],
+        result: acum,
         references: save_reference(node),
       }
     },
@@ -85,23 +88,25 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]): P
       //TODO: Si previamente hay un campo del mismo nombre no se toma
       //TODO: los parametros o propiedades se toman como nuevas referencias
       if(node.name == 'wollok.lang.Closure'
-      || node.name == 'wollok.lang.List'
-      || node.name == 'wollok.lang.Set')
+        || node.name == 'wollok.lang.List'
+        || node.name == 'wollok.lang.Set')
         return null_case
 
       const referencia  = context.find(x => x.name==node.name)
       //TODO: Encontrar la forma de incorporar referencias de las importaciones
       //como console
-      if(referencia){
+      if(node.sourceMap?.start === undefined) return null_case
+      if(referencia) {//try {
         const pl = generar_plotter(node)
         pl.tokenType = tokenTypeObj[referencia.type]
         return { result: pl, references: undefined } //no agrego informacion
-      }
+      } // catch(e){console.log(node); console.log(e); return null_case}
       return null_case
     },
     Assignment: node => {
       //node.variable
       //node.value
+      //if(node.value.name == '<value>') return null_case
       const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
       const col = columna + subStr.indexOf(node.variable.name)
       return {
@@ -112,6 +117,7 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]): P
       }
     },
     Parameter: node => {
+      if(node.name == '<value>') return null_case
       const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
       const col = columna + subStr.indexOf(node.name)
       return {
@@ -239,7 +245,7 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]): P
     },
     Expression:  _ => null_case,
     Catch: _ => null_case,
-    
+
     Describe: node => {
       return drop_reference(keyword_plotter(node, keywords[node.kind]))
     },
@@ -283,14 +289,21 @@ export function processCode(node: Node, documentoStr: string[]): NodePlotter[] {
   return node.reduce((acum, node: Node) =>
   {
     if(acum.ignore && node === acum.ignore) return acum
-    const proc_nodo = procesar(node, documentoStr, acum.references)
-
+    let proc_nodo
+    try{
+    //const
+      proc_nodo = procesar(node, documentoStr, acum.references)
+    } catch(e){
+      //console.log(node)
+      //console.log(e)
+      return null
+    }
     return {
       result: proc_nodo.result? acum.result.concat(proc_nodo.result):acum.result,
       references: acum.references.concat(proc_nodo.references || []),
       ignore: proc_nodo.ignore,
     }
-  }, { result:[], references: [{name: 'console', type: 'Reference'}], ignore:undefined  }).result
+  }, { result:[], references: [{ name: 'console', type: 'Reference' }], ignore:undefined  }).result
 }
 //return { result: [...acum.result, procesar(node, documentoStr), plotKeyboard], references: acum.references }
 //return { result: [...acum.result, procesar(node, documentoStr), plotKeyboard], references: acum.references}

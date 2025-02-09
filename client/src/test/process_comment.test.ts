@@ -28,12 +28,10 @@ function separarLineas(text: string) {
 
 suite('Semantica wollok', function () {
   test('basico test', async function () {
-//    console.log('texto')
     //const lineasSeparadas = separarLineas(comentariosLineas)
 
     const parsedFile = parse.File('_comentarios.wlk')
     const tp = parsedFile.tryParse(comentariosLineas)//docUri.toString())
-    //console.log(tp)
   })
 
   test('comentarios de una linea', async function () {
@@ -64,7 +62,7 @@ suite('Semantica wollok', function () {
       const { line, character }  = comentario.range.start
       const largo = comentario.range.end.character-character
       const contenido = lineasSeparadas[line].substring(character)
-      assert.ok(comentario.range.isSingleLine, 'debe ser de una sola linea');
+      assert.ok(comentario.range.isSingleLine, 'debe ser de una sola linea')
       assert.ok(contenido.startsWith('//'), 'los comentarios de linea comienzan con //')
       assert.equal(contenido.length, largo, 'falla en el largo de la linea')
     })
@@ -82,7 +80,6 @@ suite('Semantica wollok', function () {
     let inicioComentario = true
     assert.equal( pcm.length>1, true, 'hay varios comentarios')
     pcm.forEach( comentario => {
-//      console.log(comentario)
       assert.equal(
         comentario.tokenType,
         'comment',

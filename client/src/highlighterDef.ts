@@ -107,7 +107,8 @@ export const keywords = {
     // eslint-disable-next-line array-element-newline
     '==', '!=',
   ],
-  'Field':'var',
+  'Field': ['var', 'const'],
+  'Property':'property',
   'Method': 'method',
   'Return': 'return',
   'Assignment':'=',

@@ -1,25 +1,15 @@
 import * as assert from 'assert'
-import { getDocUri, activate } from './helper'
-import { processCode, processComments } from '../token_provider'
+import { processCode } from '../token_provider'
 import { parse } from 'wollok-ts'
 import * as vscode from 'vscode'
 import { suite } from 'mocha'
-import { plotter } from '../highlighterDef'
-import { start } from 'repl'
 import { isNumberObject, isStringObject } from 'util/types'
-import { readFileSync } from 'fs'
 
 const comentariosLineas = `// solo una linea
 var f   = 1
 var ff  = 'ff'
 const fff = 3.0 //codigo no se toma
 //otra linea  //en la misma linea 
-`
-
-const comentariosMLineas = `/*codigo no se toma
-var f   = 1 */
-var ff  = 2
-/*otra linea  */ var fff = 3  
 `
 
 /* Dado que los test dependen de archivos externos, se comprobara si
@@ -39,85 +29,6 @@ suite('Semantica wollok', function () {
   const docUri = getDocUri('_comentarios.wlk')
   const docText = docUri.toString()
   const lineasSeparadas = separarLineas(docText)
-
-  test('basico test', async function () {
-        console.log('texto')
-        const lineasSeparadas = separarLineas(comentariosLineas)
-
-        const parsedFile = parse.File('_comentarios.wlk')
-        const tp = parsedFile.tryParse(comentariosLineas)//docUri.toString())
-        console.log(tp)
-  })
-
-  test('comentarios de una linea', async function () {
-    //const parsedFile = parse.File(docUri.path)
-    //const tp = parsedFile.tryParse(docUri.toString())
-      const lineasSeparadas = separarLineas(comentariosLineas)
-
-      const parsedFile = parse.File('_comentarios.wlk')
-      const tp = parsedFile.tryParse(comentariosLineas)
-      /*
-        const lineasSeparadas_ = separarLineas(comentariosLineas)
-
-        const parsedFile = parse.File('_comentarios.wlk')
-        const tp = parsedFile.tryParse(comentariosLineas)//docUri.toString())
-*
-    const pcm = processComments(lineasSeparadas)
-    pcm.forEach( comentario => {
-      assert.equal(
-        comentario.tokenType,
-        'comment',
-        'error en el tipo de token'
-      )
-      assert.equal(
-        comentario.tokenModifiers[0],
-        'declaration',
-        'error del modificador del token'
-      )
-      const { line, character }  = comentario.range.start
-      const largo = comentario.range.end.character-character
-      const contenido = lineasSeparadas[line].substring(character)
-      assert.ok(comentario.range.isSingleLine, 'debe ser de una sola linea');
-      assert.ok(contenido.startsWith('//'), 'los comentarios de linea comienzan con //')
-      assert.equal(contenido.length, largo, 'falla en el largo de la linea')
-    })
-  })
-
-  test('comentarios multilinea linea', async function () {
-    //const parsedFile = parse.File(docUri.path)
-    //const tp = parsedFile.tryParse(docUri.toString())
-    const lineasSeparadas = separarLineas(comentariosMLineas)
-
-    const parsedFile = parse.File('_comentarios.wlk')
-    const tp = parsedFile.tryParse(comentariosMLineas)
-
-    const pcm = processComments(lineasSeparadas)
-    assert.equal( pcm.length>1, true, 'hay varios comentarios')
-    pcm.forEach( comentario => {
-      console.log(comentario)
-      assert.equal(
-        comentario.tokenType,
-        'comment',
-        'error en el tipo de token'
-      )
-      assert.equal(
-        comentario.tokenModifiers[0],
-        'declaration',
-        'error del modificador del token'
-      )
-      const start  = comentario.range.start
-      const end  = comentario.range.end
-      assert.ok(start.line<=end.line, 'el final del comentario esta despues del inicio')
-      const largo = end.character-start.character
-      const contenido_start = lineasSeparadas[start.line].substring(start.character)
-      const contenido_end = lineasSeparadas[end.line].substring(end.character)
-      //No es posible hacerlo multi linea, se separan en varios comentarios
-      //assert.equal(comentario.range.isSingleLine, true, 'debe ser de una sola linea')
-      assert.ok(contenido_start.startsWith('/*'), 'los comentarios de linea comienzan con /*')
-      assert.ok(contenido_end.endsWith('/'), 'los comentarios de linea terminan con /')
-      //assert.equal(contenido.length, largo, 'falla en el largo de la linea')
-    })
-  })
 */
   test('variables y constantes', async function () {
     //const parsedFile = parse.File(docUri.path)
@@ -125,7 +36,7 @@ suite('Semantica wollok', function () {
     const lineasSeparadas = separarLineas(comentariosLineas)
 
     const parsedFile = parse.File('_comentarios.wlk')
-    const f = parsedFile.parse('comentariosLineas')
+    //const f = parsedFile.parse('comentariosLineas')
     const tp = parsedFile.tryParse(comentariosLineas)
 
     const pcm = processCode(tp, lineasSeparadas)
@@ -204,7 +115,6 @@ suite('Semantica wollok', function () {
             'error en el tipo de token keyword'
           )
           break
-        //de momento la unica forma de probarlo es con los nombres de las variables
         case 'Paloma':
           assert.equal(
             simbolo.tokenType,
@@ -215,15 +125,80 @@ suite('Semantica wollok', function () {
       }
     })
   })
-
-  test('clase con propiedades y metodos vacios', async function () {
-    const codigoClaseVacio = `
-    class Nave{
+  test('clase con propiedades', async function () {
+    const codigoClasePropiedades = `class Nave{
       var conductor = 'Homero'
+      const tamanio = 100
+    }
+    `
 
+    const lineasSeparadas = separarLineas(codigoClasePropiedades)
+    const parsedFile = parse.File('_comentarios.wlk')
+    const tp = parsedFile.tryParse(codigoClasePropiedades)
+    const pcm = processCode(tp, lineasSeparadas).filter(x => x !== undefined)
+
+    pcm.forEach( simbolo => {
+      assert.equal(
+        simbolo.tokenModifiers[0],
+        'declaration',
+        'error del modificador del token'
+      )
+      const start  = simbolo.range.start
+      const end  = simbolo.range.end
+      assert.ok(start.line==end.line, 'token esta en la misma linea')
+
+      const contenido = lineasSeparadas[start.line].substring(start.character, end.character)
+      switch (contenido) {
+        case 'class':
+        case 'var':
+        case 'const':
+          assert.equal(
+            simbolo.tokenType,
+            'keyword',
+            'error en el tipo de token keyword'
+          )
+          break
+        case 'Nave':
+          assert.equal(
+            simbolo.tokenType,
+            'class',
+            'error en el tipo de token de clase'
+          )
+          break
+        //variables
+        case 'conductor':
+        case 'tamanio':
+          assert.equal(
+            simbolo.tokenType,
+            'property',
+            'error en el tipo de token de clase'
+          )
+          break
+        case '\'Homero\'':
+          assert.equal(
+            simbolo.tokenType,
+            'string',
+            'error en el tipo de token de clase'
+          )
+          break
+        case '100':
+          assert.equal(
+            simbolo.tokenType,
+            'number',
+            'error en el tipo de token de clase'
+          )
+          break
+        default:
+          assert.fail(`caso no testeado: ${contenido}: ${simbolo.tokenType} (${start.character},${end.character})}`)
+      }
+    })
+  })
+
+  test('clase con metodos vacios', async function () {
+    const codigoClaseVacio = `class Nave{
       method sube(alguien){
       }
-      method baja(alguien){
+      method baja(pasajero){
       }
       method cantidadPasajeros() {
       }
@@ -263,12 +238,11 @@ suite('Semantica wollok', function () {
             'error en el tipo de token de clase'
           )
           break
-        //variables
-        case 'conductor':
-        case 'pasajeros':
+        case 'alguien':
+        case 'pasajero':
           assert.equal(
             simbolo.tokenType,
-            'property',
+            'parameter',
             'error en el tipo de token de clase'
           )
           break
@@ -282,20 +256,14 @@ suite('Semantica wollok', function () {
             'error en el tipo de token de clase'
           )
           break
-        case 'pasajero':
-          assert.equal(
-            simbolo.tokenType,
-            'parameter',
-            'error en el tipo de token de clase'
-          )
-          break
+        default:
+          assert.fail(`caso no testeado: ${contenido}: ${simbolo.tokenType} (${start.character},${end.character})}`)
       }
     })
   })
 
   test('clase con propiedades y metodos', async function () {
-    const codigoClaseCompl = `
-    class Nave {
+    const codigoClaseCompl = `class Nave {
       var patente = "Star"
       //const pasajeros = []
 
@@ -328,11 +296,13 @@ suite('Semantica wollok', function () {
       const start  = simbolo.range.start
       const end  = simbolo.range.end
       assert.ok(start.line==end.line, 'token esta en la misma linea')
-      const contenido = lineasSeparadas[start.line].substring(start.character, end.character)
+      const contenido = extraerLinea(lineasSeparadas, simbolo.range)
       switch (contenido) {
         case 'class':
         case 'method':
         case 'return':
+        case 'var':
+        case '=':
           assert.equal(
             simbolo.tokenType,
             'keyword',
@@ -347,6 +317,13 @@ suite('Semantica wollok', function () {
           )
           break
         //variables
+        case '"Star"':
+          assert.equal(
+            simbolo.tokenType,
+            'string',
+            'error en el tipo de token de clase'
+          )
+          break
         case 'conductor':
         case 'patente':
         //case 'pasajeros':
@@ -367,6 +344,7 @@ suite('Semantica wollok', function () {
           )
           break
         case 'pasajero':
+        case 'alguien':
           assert.equal(
             simbolo.tokenType,
             'parameter',
@@ -383,9 +361,12 @@ suite('Semantica wollok', function () {
             'error en el tipo de token de metodos de los parametros'
           )
           break
+        case 'const':
+          assert.fail('const esta comentado.')
+          break
         default:
           // hay otro caso con property..?
-          assert.fail('No debe haber extras')
+          assert.fail('No debe haber extras, ' + contenido + ' , largo' + contenido.length)
       }
     })
   })
@@ -457,7 +438,6 @@ suite('Semantica wollok', function () {
             'error en el tipo de token keyword'
           )
           break
-        //de momento la unica forma de probarlo es con los nombres de las variables
         case 'Pepita':
           assert.equal(
             simbolo.tokenType,
@@ -468,39 +448,62 @@ suite('Semantica wollok', function () {
       }
     })
     test('test archivo', async function () {
-      const contenido =  extraerContenidoArchivo('../testFixture/_comentarios.wlk')
+      //const contenido =  extraerContenidoArchivo('../testFixture/_comentarios.wlk')
 
     })
 
-    //mas test aqui
+    test('test de test vacios', async function () {
+      const codigoTest = `
+describe "Tests" {
+        test "test1" {}
+        test "test2" {        }
+        test "test3" {
+
+        }
+}`
+      const lineasSeparadas = separarLineas(codigoTest)
+      const parsedFile = parse.File('_testeo.wlk')
+      const tp = parsedFile.tryParse(codigoTest)
+      const pcm = processCode(tp, lineasSeparadas)
+      pcm.forEach( simbolo => {
+        assert.equal(
+          simbolo.tokenModifiers[0],
+          'declaration',
+          'error del modificador del token'
+        )
+        const start  = simbolo.range.start
+        const end  = simbolo.range.end
+        assert.ok(start.line==end.line, 'token esta en la misma linea')
+
+        const contenido = lineasSeparadas[start.line].substring(start.character, end.character)
+        switch (contenido) {
+          case 'describe':
+          case 'test':
+            assert.equal(
+              simbolo.tokenType,
+              'keyword',
+              'error en el tipo de token keyword'
+            )
+            break
+          case 'Test':
+          case 'test1':
+          case 'test2':
+          case 'test3':
+            assert.equal(
+              simbolo.tokenType,
+              'string',
+              'error en el tipo de token de clase'
+            )
+            break
+          default:
+            assert.fail('No debe haber extras, ' + contenido + ' , largo' + contenido.length)
+        }
+      })
+    })
   })
+
+
+  function extraerLinea(lineasSeparadas: string[], range: vscode.Range) {
+    return lineasSeparadas[range.start.line].substring(range.start.character, range.end.character)
+  }
 })
-
-function extraerContenidoArchivo(ruta:string) {
-  return readFileSync(`./{ruta}`, 'utf-8')
-}
-
-async function compararUriConResultadoToken(
-  docUri: vscode.Uri,
-  //position: vscode.Position,
-  expectedCompletionList: Record<string, string> //vscode.CompletionList
-) {
-  await activate(docUri)
-
-  // Executing the command `vscode.executeCompletionItemProvider` to simulate triggering completion
-  const actualCompletionList = (await vscode.commands.executeCommand(
-    //@command:editor.action.inspectTMScopes
-    //estaba vscode.executeCompletionItemProvider
-    //'vscode.editor.action.inspectTMScopes',
-    'vscode.editor.action.inspect',
-    docUri
-  )) // as vscode.CompletionList
-  assert.ok(actualCompletionList !== undefined)
-/*
-  assert.ok(actualCompletionList.items.length >= 2)
-  expectedCompletionList.items.forEach((expectedItem, i) => {
-    const actualItem = actualCompletionList.items[i]
-    assert.equal(actualItem.label, expectedItem.label)
-    assert.equal(actualItem.kind, expectedItem.kind)
-  })*/
-}

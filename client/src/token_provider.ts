@@ -1,4 +1,4 @@
-import { plotter, NodePlotter, keywords, tokenTypeObj } from './highlighterDef'
+import { plotter, NodePlotter, keywords, tokenTypeObj, NodePlotterComentary } from './highlighterDef'
 import { Node, Singleton } from 'wollok-ts'
 
 //Nota: no todos los node's tienen .start (dando undefined), pueden provocar excepciones.
@@ -314,7 +314,7 @@ function plotterMultiLinea(arr: any[]) {
 }
 
 type ProcesamientoComentario = {
-  result: NodePlotter[];
+  result: NodePlotterComentary[];
   multilinea?: {
     ln: number,
     col: number,
@@ -324,7 +324,20 @@ type ProcesamientoComentario = {
   presetIndex?: number;
 }
 
-export function processComments(docText: string[]): NodePlotter[] {
+export function separateComments(pcm: NodePlotterComentary[]): { line: NodePlotterComentary[], multiline: NodePlotterComentary[] }{
+  const nodosSimples = pcm.filter((node: NodePlotterComentary) => node.rangeEnd === undefined)
+  const nodosMultiples: NodePlotter[] = pcm
+    .filter((node: NodePlotterComentary) => node.rangeEnd !== undefined)
+    .map(node =>
+      [node.range].concat(node.rangeEnd).map(x => {
+        return { range: x, tokenType: node.tokenType, tokenModifiers: node.tokenModifiers }
+      }
+      )
+    ).flat()
+  return { line:nodosSimples, multiline:nodosMultiples }
+}
+
+export function processComments(docText: string[]): NodePlotterComentary[] {
   return docText.reduce( processCommentLine, { result:[], multilinea:undefined }).result
 
   function processCommentLine(acum: ProcesamientoComentario, strln, linea) {
@@ -340,7 +353,12 @@ export function processComments(docText: string[]): NodePlotter[] {
           { ln: linea, col: acum.firstLineMC, len: indMf + 4 }:
           { ln: linea, col: presetIndex, len: strln.length - presetIndex }
         const temp = plotterMultiLinea([...acum.multilinea, plot])
-        const tempconcat = acum.result.concat(temp)
+
+        //Se conserva solo el primer Nodo, el resto de los resultados se agregan en el otro range
+        const tempconcat = acum.result.concat({
+          ...temp[0],
+          rangeEnd: temp.map(x => x.range).filter((_, i) => i>0), //temp[temp.length-1].range,
+        })
         return processCommentLine({
           result: tempconcat,
           presetIndex: newLen,

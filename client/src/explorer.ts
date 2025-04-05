@@ -21,8 +21,23 @@ export const provider: vscode.DocumentSemanticTokensProvider = {
 
     const lineasSeparadas = separarLineas(docText)
     const pcd = processCode(tp.members[0], lineasSeparadas)
-    const pcm = processComments(lineasSeparadas)
-
+    let pcm = processComments(lineasSeparadas)
+    /*
+    pcm = pcm.reduce((node: def.NodePlotterComentary) => {
+      return node.rangeEnd === undefined? node :
+        [...node.rangeEnd.map(x => { return{ ...node, range:x }}), node]
+    }, [])*/
+    {
+      const nodosSimples = pcm.filter((node: def.NodePlotterComentary) => node.rangeEnd === undefined)
+      const nodosMultiples: def.NodePlotter[] = pcm
+        .filter((node: def.NodePlotterComentary) => node.rangeEnd !== undefined)
+        .map(node =>
+          [node.range].concat(node.rangeEnd).map(x => {
+            return{ range:x, tokenType: node.tokenType, tokenModifiers:node.tokenModifiers }}
+          )
+        ).flat()
+      pcm = nodosSimples.concat(nodosMultiples)
+    }
     const processed = []
       .concat(pcd)
       .concat(pcm)

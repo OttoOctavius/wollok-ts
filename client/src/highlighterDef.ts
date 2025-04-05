@@ -164,6 +164,8 @@ export type NodePlotter = {
   tokenModifiers?: string[]
 }
 
+export type NodePlotterComentary = NodePlotter & { rangeEnd?: vscode.Range[] }
+
 export function plotter(start: { ln, col, len }, kind: string): NodePlotter {
   return {
     range: new vscode.Range(

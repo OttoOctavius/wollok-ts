@@ -40,6 +40,11 @@
 				"id": "parameter",
 				"superType": "type",
 				"description": "parametro de metodos o funciones"
+			},
+      {
+				"id": "boolean",
+				"superType": "type",
+				"description": "palabra reservada de wollok para booleanos"
 			}
 		],
 		"semanticTokenModifiers": [

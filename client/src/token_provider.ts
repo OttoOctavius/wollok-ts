@@ -14,9 +14,9 @@ function extraerLineaColumna(node: Node, documentoStr: string[]) {
 }
 
 function procesar(node: Node, documentoStr: string[], context: NodeContext[]): ProcesamientoCodigo {
-  const generar_plotter = node => {
+  const generar_plotter = (node, offset=0) => {
     const { linea, columna, subStr } = extraerLineaColumna(node, documentoStr)
-    const col = columna + subStr.indexOf(node.name)
+    const col = columna + subStr.indexOf(node.name, offset)
     return plotter({ ln: linea, col: col, len: node.name.length }, node.kind)
   }
   const keyword_plotter = (node, mensaje) => {
@@ -74,10 +74,12 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]): P
       }
     },
     Variable: node => {
+      const largoExtra = node.isConstant? 'const'.length:'var'.length
+      const keyword = node.isConstant? 'const':'var'
       return {
         result: [
-          generar_plotter(node),
-          keyword_plotter(node, node.isConstant? 'const':'var'),
+          generar_plotter(node, largoExtra),
+          keyword_plotter(node, keyword),
         ],
         references: save_reference(node),
       }
@@ -212,6 +214,8 @@ function procesar(node: Node, documentoStr: string[], context: NodeContext[]): P
     },
     Package: node => {
       //el nombre puede o no estar
+      const { subStr } = extraerLineaColumna(node, documentoStr)
+      if(subStr.indexOf(node.name)==-1 || subStr.indexOf('Package')==-1) return null_case
       try { //alternativamente examinar si el keyword tiene indice negativo
         return {
           result: [

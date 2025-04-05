@@ -25,7 +25,7 @@ export const tokenTypeObj = {
   'Literal': 'property',
   'Literal_number': 'number',
   'Literal_string': 'string',
-  'Literal_bool': 'keyword',
+  'Literal_bool': 'keyword', //TODO el tipo boolean no existe. keyword lo marca azul, y object verde
   'Send': 'operator',
   'Super': 'property',
   'New': 'property',
@@ -64,6 +64,7 @@ export const tokenTypeModifierObj = {
   'Literal': ['declaration'], //['readonly'],
   'Literal_number': ['declaration'], //['readonly'],
   'Literal_string': ['declaration'], //['readonly'],
+  'Literal_bool':['declaration'],
   'Send': ['declaration'],
   'Super': ['declaration'],
   'New': ['declaration'],
